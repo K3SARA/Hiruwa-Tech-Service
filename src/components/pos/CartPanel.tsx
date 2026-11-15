@@ -80,13 +80,6 @@ export function CartPanel() {
     runSearch(q, category);
   }
 
-  // Auto-close sheet when cart becomes empty
-  useEffect(() => {
-    if (cart.length === 0) {
-      setShowCartSheet(false);
-    }
-  }, [cart.length]);
-
   function handleCategoryChange(cat: string | null) {
     setCategory(cat);
     runSearch(query, cat);
@@ -111,7 +104,13 @@ export function CartPanel() {
   }
 
   function removeFromCart(unitId: string) {
-    setCart((prev) => prev.filter((c) => c.unitId !== unitId));
+    setCart((prev) => {
+      const next = prev.filter((c) => c.unitId !== unitId);
+      if (next.length === 0) {
+        setShowCartSheet(false);
+      }
+      return next;
+    });
   }
 
   function updatePrice(unitId: string, salePrice: string) {
