@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ScanBarcode, ShoppingCart } from "lucide-react";
+import { ScanBarcode, ShoppingCart, Wrench } from "lucide-react";
 import { clsx } from "clsx";
 
 const TABS = [
   { href: "/pos", label: "Billing", icon: ShoppingCart },
+  { href: "/repairs", label: "Repairs", icon: Wrench },
   { href: "/stock", label: "Stock Check", icon: ScanBarcode },
 ];
 
@@ -14,7 +15,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="no-print grid grid-cols-2 border-t border-black/10 bg-white dark:border-white/10 dark:bg-black">
+    <nav className="no-print grid grid-cols-3 border-t border-black/10 bg-white dark:border-white/10 dark:bg-black">
       {TABS.map(({ href, label, icon: Icon }) => {
         const active = pathname.startsWith(href);
         return (

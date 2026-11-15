@@ -26,6 +26,7 @@ model User {
 
   invoicesCreated Invoice[]       @relation("InvoiceCreatedBy")
   claimsHandled   WarrantyClaim[] @relation("ClaimHandledBy")
+  repairsCreated  RepairOrder[]   @relation("RepairsCreatedBy")
 }
 
 // ---------------------------------------------------------------------------
@@ -155,4 +156,46 @@ model WarrantyClaim {
   inventoryUnit InventoryUnit @relation(fields: [inventoryUnitId], references: [id])
 
   @@index([inventoryUnitId])
+}
+
+// ---------------------------------------------------------------------------
+// Mobile repair orders
+// ---------------------------------------------------------------------------
+
+enum RepairStatus {
+  RECEIVED
+  IN_PROGRESS
+  WAITING_PARTS
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+model RepairOrder {
+  id               String       @id @default(cuid())
+  sequence         Int          @unique @default(autoincrement())
+  customerName     String
+  customerPhone    String
+  deviceBrand      String
+  deviceModel      String
+  imeiOrSerial     String?
+  passcode         String?
+  faultDescription String
+  conditionNotes   String?
+  estimatedCost    Decimal?     @db.Decimal(10, 2)
+  advancePaid      Decimal      @default(0) @db.Decimal(10, 2)
+  finalCost        Decimal?     @db.Decimal(10, 2)
+  status           RepairStatus @default(RECEIVED)
+  technicianNotes  String?
+  expectedDelivery DateTime?
+  deliveredAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  createdById String?
+  createdBy   User?   @relation("RepairsCreatedBy", fields: [createdById], references: [id])
+
+  @@index([status])
+  @@index([customerPhone])
+  @@index([deviceBrand])
 }

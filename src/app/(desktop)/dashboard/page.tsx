@@ -6,13 +6,14 @@ async function getStats() {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  const [inStock, stockValue, soldToday, pendingClaims, totalRevenue, unsettledInvoices] = await Promise.all([
+  const [inStock, stockValue, soldToday, pendingClaims, totalRevenue, unsettledInvoices, activeRepairs] = await Promise.all([
     prisma.inventoryUnit.count({ where: { status: "IN_STOCK" } }),
     prisma.inventoryUnit.aggregate({ _sum: { costPrice: true }, where: { status: "IN_STOCK" } }),
     prisma.invoice.count({ where: { date: { gte: startOfDay } } }),
     prisma.warrantyClaim.count({ where: { status: "PENDING" } }),
     prisma.invoice.aggregate({ _sum: { totalAmount: true }, where: { date: { gte: startOfDay } } }),
     prisma.invoice.findMany({ select: { totalAmount: true, amountPaid: true } }),
+    prisma.repairOrder.count({ where: { status: { in: ["RECEIVED", "IN_PROGRESS", "WAITING_PARTS"] } } }),
   ]);
 
   const outstandingCredit = unsettledInvoices.reduce(
@@ -27,6 +28,7 @@ async function getStats() {
     pendingClaims,
     revenueToday: totalRevenue._sum.totalAmount ?? 0,
     outstandingCredit,
+    activeRepairs,
   };
 }
 
@@ -34,6 +36,7 @@ export default async function DashboardPage() {
   const [stats, lowStockProducts] = await Promise.all([getStats(), getLowStockProducts()]);
 
   const cards = [
+    { label: "Active repair jobs", value: stats.activeRepairs },
     { label: "Units in stock", value: stats.inStock },
     { label: "Stock value", value: `Rs. ${Number(stats.stockValue).toFixed(2)}` },
     { label: "Invoices today", value: stats.soldToday },
