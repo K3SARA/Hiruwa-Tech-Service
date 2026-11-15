@@ -1,8 +1,12 @@
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
-import { signIn } from "@/lib/auth";
+import { headers } from "next/headers";
+import { auth, signIn } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { detectDevice } from "@/lib/device";
 import { BUSINESS } from "@/lib/business";
 import { Logo } from "@/components/layout/Logo";
+import { LoginSubmitButton } from "@/components/auth/LoginSubmitButton";
 
 export default async function LoginPage({
   searchParams,
@@ -11,17 +15,42 @@ export default async function LoginPage({
 }) {
   const { callbackUrl, error } = await searchParams;
 
+  // If already authenticated, redirect straight to the destination
+  const session = await auth();
+  if (session?.user) {
+    const headersList = await headers();
+    const device = detectDevice(headersList.get("user-agent"));
+    const homeForUser = device === "mobile" || session.user.role === "SALES" ? "/pos" : "/dashboard";
+    redirect(callbackUrl ?? homeForUser);
+  }
+
   async function authenticate(formData: FormData) {
     "use server";
+    const email = (formData.get("email") as string | null)?.trim().toLowerCase();
+    const password = formData.get("password") as string | null;
+
+    if (!email || !password) {
+      redirect(`/login?error=CredentialsSignin${callbackUrl ? `&callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`);
+    }
+
+    const headersList = await headers();
+    const device = detectDevice(headersList.get("user-agent"));
+
+    let target = callbackUrl;
+    if (!target || target === "/" || target === "/login") {
+      const user = await prisma.user.findUnique({ where: { email } });
+      target = device === "mobile" || user?.role === "SALES" ? "/pos" : "/dashboard";
+    }
+
     try {
       await signIn("credentials", {
-        email: formData.get("email"),
-        password: formData.get("password"),
-        redirectTo: callbackUrl ?? "/",
+        email,
+        password,
+        redirectTo: target,
       });
     } catch (err) {
       if (err instanceof AuthError) {
-        redirect(`/login?error=CredentialsSignin${callbackUrl ? `&callbackUrl=${callbackUrl}` : ""}`);
+        redirect(`/login?error=CredentialsSignin${callbackUrl ? `&callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`);
       }
       throw err;
     }
@@ -41,6 +70,7 @@ export default async function LoginPage({
               name="email"
               type="email"
               required
+              autoComplete="email"
               className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:border-zinc-700 dark:bg-black dark:text-white"
             />
           </div>
@@ -50,18 +80,14 @@ export default async function LoginPage({
               name="password"
               type="password"
               required
+              autoComplete="current-password"
               className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:border-zinc-700 dark:bg-black dark:text-white"
             />
           </div>
 
           {error && <p className="text-xs font-medium text-amber-600 dark:text-amber-400">Invalid email or password.</p>}
 
-          <button
-            type="submit"
-            className="w-full rounded-md bg-orange-600 py-2.5 text-sm font-semibold text-white hover:bg-orange-500 transition-colors shadow-sm"
-          >
-            Sign in
-          </button>
+          <LoginSubmitButton />
         </form>
       </div>
     </div>
