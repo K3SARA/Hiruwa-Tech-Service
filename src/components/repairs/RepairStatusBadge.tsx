@@ -36,3 +36,4 @@ export function RepairStatusBadge({ status }: { status: RepairStatus }) {
     </span>
   );
 }
+

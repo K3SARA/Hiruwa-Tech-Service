@@ -83,3 +83,4 @@ export function buildRepairReadyWhatsApp(order: {
 
   return buildWhatsAppLink(order.customerPhone, lines.join("\n"));
 }
+
