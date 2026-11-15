@@ -33,7 +33,7 @@ export function AddProductForm() {
 
       <SupplierCombobox />
 
-      {state.error && <p className="text-xs text-red-600">{state.error}</p>}
+      {state.error && <p className="text-xs font-medium text-amber-600 dark:text-amber-400">{state.error}</p>}
       {state.success && <p className="text-xs text-green-600">{state.success}</p>}
 
       <button disabled={isPending} className="w-full rounded-md bg-orange-600 py-2 text-sm font-semibold text-white disabled:opacity-40 hover:bg-orange-500">

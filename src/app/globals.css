@@ -3,18 +3,24 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --hiruwa-orange: #f78223;
+  --hiruwa-grey: #3f4044;
+  --hiruwa-black: #0c0d0e;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-hiruwa-orange: var(--hiruwa-orange);
+  --color-hiruwa-grey: var(--hiruwa-grey);
+  --color-hiruwa-black: var(--hiruwa-black);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #0c0d0e;
     --foreground: #ededed;
   }
 }
@@ -42,7 +48,7 @@ body {
   }
 
   /* Browsers strip background colors by default when printing (to save ink) —
-     this forces the invoice table's orange header / striped rows to actually print. */
+     this forces the invoice table's orange/grey header and striped rows to print. */
   * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;

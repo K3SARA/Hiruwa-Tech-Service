@@ -10,7 +10,7 @@ const STATUS_STYLES: Record<string, string> = {
   IN_STOCK: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400",
   SOLD: "bg-black/10 text-black/60 dark:bg-white/10 dark:text-white/60",
   IN_REPAIR: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400",
-  RETIRED: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400",
+  RETIRED: "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400",
 };
 
 export function StockSearch() {

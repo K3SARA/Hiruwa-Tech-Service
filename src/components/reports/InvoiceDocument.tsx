@@ -111,7 +111,7 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
 
       <table className="mt-4 w-full border-collapse text-xs">
         <thead>
-          <tr className="bg-orange-600 text-left text-white">
+          <tr className="bg-[#3F4044] text-left text-white">
             <th className="py-2 pl-2 pr-2 font-semibold">Item</th>
             <th className="py-2 pr-2 font-semibold text-center">Qty</th>
             <th className="py-2 pr-2 font-semibold">Serial No.</th>
@@ -121,7 +121,7 @@ export function InvoiceDocument({ invoice }: { invoice: InvoiceDocumentData }) {
         </thead>
         <tbody>
           {groupedItems.map((item, i) => (
-            <tr key={item.id} className={i % 2 === 1 ? "bg-orange-50/60 align-top" : "bg-white align-top"}>
+            <tr key={item.id} className={i % 2 === 1 ? "bg-zinc-50 align-top" : "bg-white align-top"}>
               <td className="py-1.5 pl-2 pr-2">
                 {item.brand} {item.productName}
               </td>

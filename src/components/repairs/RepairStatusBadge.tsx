@@ -24,7 +24,7 @@ const CONFIG: Record<RepairStatus, { label: string; className: string }> = {
   },
   CANCELLED: {
     label: "Cancelled",
-    className: "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400",
+    className: "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400",
   },
 };
 

@@ -233,7 +233,7 @@ export function CartPanel() {
               </div>
               <button
                 onClick={() => removeFromCart(c.unitId)}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-black/40 hover:bg-black/5 hover:text-red-600 dark:hover:bg-white/10 transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-orange-600 dark:hover:bg-zinc-800 dark:hover:text-orange-400 transition-colors"
                 aria-label="Remove item"
               >
                 <Trash2 size={18} />
@@ -372,7 +372,7 @@ export function CartPanel() {
         </div>
       )}
 
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs font-medium text-amber-600 dark:text-amber-400">{error}</p>}
 
       <button
         disabled={!canCheckout || isCheckingOut}
@@ -423,7 +423,7 @@ export function CartPanel() {
                   {isInCart ? (
                     <button
                       onClick={() => removeFromCart(r.unitId)}
-                      className="shrink-0 rounded-md bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-600 dark:bg-red-950/40 dark:text-red-400"
+                      className="shrink-0 rounded-md bg-[#3F4044] px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700 transition-colors"
                     >
                       Remove
                     </button>

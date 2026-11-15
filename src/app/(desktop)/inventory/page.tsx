@@ -48,7 +48,7 @@ export default async function InventoryPage({
       </div>
 
       {error && (
-        <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
+        <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
           {error}
         </p>
       )}
@@ -121,7 +121,7 @@ export default async function InventoryPage({
                     Edit
                   </Link>
                   <form action={deleteProduct.bind(null, p.id)}>
-                    <button className="text-xs text-black/40 hover:text-red-600">Delete</button>
+                    <button className="text-xs text-zinc-400 hover:text-orange-600 dark:text-zinc-500 dark:hover:text-orange-400 transition-colors">Delete</button>
                   </form>
                 </div>
               </td>

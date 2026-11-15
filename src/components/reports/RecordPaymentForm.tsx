@@ -30,7 +30,7 @@ export function RecordPaymentForm({ invoiceId, balanceDue }: { invoiceId: string
           {isPending ? "Recording..." : "Record payment"}
         </button>
       </form>
-      {state.error && <p className="mt-2 text-xs text-red-600">{state.error}</p>}
+      {state.error && <p className="mt-2 text-xs font-medium text-amber-600 dark:text-amber-400">{state.error}</p>}
       {state.success && <p className="mt-2 text-xs text-green-600">{state.success}</p>}
     </div>
   );

@@ -20,13 +20,13 @@ export default async function MobileLayout({ children }: { children: React.React
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
-      <header className="no-print flex items-center justify-between border-b border-black/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-black">
+    <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-[#0c0d0e]">
+      <header className="no-print flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-[#121316]">
         <div className="flex items-center gap-2.5">
           <Logo className="h-8 w-auto" />
           <div>
-            <p className="text-sm font-bold leading-tight">{BUSINESS.name}</p>
-            <p className="text-[11px] text-black/50 dark:text-white/50">{session?.user?.name}</p>
+            <p className="text-sm font-bold leading-tight text-black dark:text-white">{BUSINESS.name}</p>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{session?.user?.name}</p>
           </div>
         </div>
         <form
@@ -35,11 +35,15 @@ export default async function MobileLayout({ children }: { children: React.React
             await signOut({ redirectTo: "/login" });
           }}
         >
-          <button className="text-xs font-medium text-red-600">Sign out</button>
+          <button className="text-xs font-medium text-zinc-500 hover:text-orange-600 dark:text-zinc-400 dark:hover:text-orange-400 transition-colors">
+            Sign out
+          </button>
         </form>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 print:overflow-visible print:bg-white print:p-0">{children}</main>
+      <main className="flex-1 overflow-y-auto p-4 dark:bg-[#0c0d0e] print:overflow-visible print:bg-white print:p-0">
+        {children}
+      </main>
 
       <MobileNav />
       <Footer />

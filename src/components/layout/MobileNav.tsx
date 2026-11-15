@@ -15,7 +15,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="no-print grid grid-cols-3 border-t border-black/10 bg-white dark:border-white/10 dark:bg-black">
+    <nav className="no-print grid grid-cols-3 border-t border-zinc-200 bg-white dark:border-zinc-800 dark:bg-[#121316]">
       {TABS.map(({ href, label, icon: Icon }) => {
         const active = pathname.startsWith(href);
         return (
@@ -23,8 +23,10 @@ export function MobileNav() {
             key={href}
             href={href}
             className={clsx(
-              "flex flex-col items-center gap-1 py-2.5 text-xs font-medium",
-              active ? "text-orange-600" : "text-black/50 dark:text-white/50"
+              "flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors",
+              active
+                ? "text-orange-600 font-semibold"
+                : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
             )}
           >
             <Icon size={22} strokeWidth={active ? 2.5 : 2} />

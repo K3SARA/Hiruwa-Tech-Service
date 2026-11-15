@@ -182,7 +182,7 @@ export function RepairList({
                     <button
                       onClick={() => handleDelete(order.id)}
                       aria-label="Delete repair order"
-                      className="rounded-md border border-red-500/20 p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      className="rounded-md border border-zinc-200 p-1.5 text-zinc-400 hover:border-orange-500 hover:text-orange-600 dark:border-zinc-800 dark:text-zinc-500 dark:hover:text-orange-400 transition-colors"
                       title="Delete Order"
                     >
                       <Trash2 size={16} />

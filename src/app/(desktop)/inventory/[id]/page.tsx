@@ -25,7 +25,7 @@ export default async function ProductDetailPage({
   return (
     <div className="space-y-6">
       {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
+        <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
           {error}
         </p>
       )}
@@ -80,7 +80,7 @@ export default async function ProductDetailPage({
               <td className="px-4 py-2 text-right">
                 {u.status !== "SOLD" && (
                   <form action={deleteInventoryUnit.bind(null, u.id, product.id)}>
-                    <button className="text-xs text-black/40 hover:text-red-600">Remove</button>
+                    <button className="text-xs text-zinc-400 hover:text-orange-600 dark:text-zinc-500 dark:hover:text-orange-400 transition-colors">Remove</button>
                   </form>
                 )}
               </td>
