@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Auth / staff accounts
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN // Desktop: full dashboard, inventory CRUD, reports, warranty claims
+  SALES // Mobile: POS + read-only stock lookup only
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(SALES)
+  createdAt    DateTime @default(now())
+
+  invoicesCreated Invoice[]       @relation("InvoiceCreatedBy")
+  claimsHandled   WarrantyClaim[] @relation("ClaimHandledBy")
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+// Reusable across products — captured once, then picked from a list for
+// future products instead of retyping the same supplier's details.
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  phone     String
+  createdAt DateTime @default(now())
+
+  products Product[]
+}
+
+model Product {
+  id                String   @id @default(cuid())
+  name              String
+  brand             String
+  category          String
+  sku               String   @unique
+  sellingPrice      Decimal? @db.Decimal(10, 2) // suggested price; sale price is still editable per-invoice at checkout
+  warrantyMonths    Int // default warranty duration applied to units sold
+  lowStockThreshold Int      @default(3) // IN_STOCK unit count at/below this triggers the low-stock alert
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+
+  units InventoryUnit[]
+
+  @@index([brand])
+  @@index([category])
+  @@index([supplierId])
+}
+
+enum UnitStatus {
+  IN_STOCK
+  SOLD
+  IN_REPAIR
+  RETIRED // written off / scrapped, no longer sellable or repairable
+}
+
+// One row per physical, individually serialized item — never a generic quantity count.
+model InventoryUnit {
+  id           String     @id @default(cuid())
+  productId    String
+  serialNumber String     @unique
+  status       UnitStatus @default(IN_STOCK)
+  location     String? // shelf / bin reference for fast floor lookup
+  costPrice    Decimal?   @db.Decimal(10, 2)
+  receivedAt   DateTime   @default(now())
+
+  product      Product         @relation(fields: [productId], references: [id])
+  invoiceItem  InvoiceItem?
+  warrantyClaims WarrantyClaim[]
+
+  @@index([productId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Sales / billing
+// ---------------------------------------------------------------------------
+
+model Invoice {
+  id            String   @id @default(cuid())
+  sequence      Int      @unique @default(autoincrement()) // human-facing invoice number is derived from this, e.g. INV-000001
+  customerName  String
+  customerPhone String
+  vehicleNumber String?
+  date          DateTime @default(now())
+  totalAmount   Decimal  @db.Decimal(10, 2)
+  amountPaid    Decimal  @default(0) @db.Decimal(10, 2) // < totalAmount means this is a credit / partially-paid sale
+
+  createdById String?
+  createdBy   User?   @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
+
+  items InvoiceItem[]
+
+  @@index([customerPhone])
+}
+
+// Links one sold serial number to the invoice it was billed on, and freezes
+// the warranty terms at time of sale so later Product edits can't retroactively
+// change a customer's existing warranty.
+model InvoiceItem {
+  id              String   @id @default(cuid())
+  invoiceId       String
+  inventoryUnitId String   @unique
+  salePrice       Decimal  @db.Decimal(10, 2)
+  warrantyMonths  Int
+
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  inventoryUnit InventoryUnit @relation(fields: [inventoryUnitId], references: [id])
+
+  @@index([invoiceId])
+}
+
+// ---------------------------------------------------------------------------
+// Warranty claims
+// ---------------------------------------------------------------------------
+
+enum ClaimStatus {
+  PENDING
+  IN_REPAIR
+  REPLACED
+  RESOLVED
+  REJECTED
+}
+
+model WarrantyClaim {
+  id              String      @id @default(cuid())
+  inventoryUnitId String
+  dateClaimed     DateTime    @default(now())
+  issueDescription String
+  status          ClaimStatus @default(PENDING)
+  resolutionNotes String?
+
+  handledById String?
+  handledBy   User?  @relation("ClaimHandledBy", fields: [handledById], references: [id])
+
+  inventoryUnit InventoryUnit @relation(fields: [inventoryUnitId], references: [id])
+
+  @@index([inventoryUnitId])
+}
