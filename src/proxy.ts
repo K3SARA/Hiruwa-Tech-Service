@@ -11,7 +11,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
 
-  if (!session) {
+  if (!session?.user) {
     if (pathname === "/login") return NextResponse.next();
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
