@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ScanBarcode, ShoppingCart, Wrench, Package, LayoutDashboard } from "lucide-react";
+import { ScanBarcode, ShoppingCart, Wrench, Package, LayoutDashboard, Receipt } from "lucide-react";
 import { clsx } from "clsx";
 
 interface MobileNavProps {
@@ -16,22 +16,23 @@ export function MobileNav({ role = "SALES" }: MobileNavProps) {
     role === "ADMIN"
       ? [
           { href: "/pos", label: "Billing", icon: ShoppingCart },
+          { href: "/bills", label: "Bills", icon: Receipt },
           { href: "/repairs", label: "Repairs", icon: Wrench },
           { href: "/inventory", label: "Inventory", icon: Package },
-          { href: "/stock", label: "Stock", icon: ScanBarcode },
           { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
         ]
       : [
           { href: "/pos", label: "Billing", icon: ShoppingCart },
+          { href: "/bills", label: "Bills", icon: Receipt },
           { href: "/repairs", label: "Repairs", icon: Wrench },
-          { href: "/stock", label: "Stock Check", icon: ScanBarcode },
+          { href: "/stock", label: "Stock", icon: ScanBarcode },
         ];
 
   return (
     <nav
       className={clsx(
         "no-print grid border-t border-zinc-200 bg-white dark:border-zinc-800 dark:bg-[#121316] shadow-md",
-        role === "ADMIN" ? "grid-cols-5" : "grid-cols-3"
+        role === "ADMIN" ? "grid-cols-5" : "grid-cols-4"
       )}
     >
       {tabs.map(({ href, label, icon: Icon }) => {
