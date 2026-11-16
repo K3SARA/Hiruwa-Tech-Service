@@ -318,3 +318,4 @@ export function CompletedBillsList({ initialBills }: CompletedBillsListProps) {
     </div>
   );
 }
+

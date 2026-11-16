@@ -39,3 +39,4 @@ export function buildBillWhatsAppLink(args: {
 
   return buildWhatsAppLink(args.phone, lines.join("\n"));
 }
+

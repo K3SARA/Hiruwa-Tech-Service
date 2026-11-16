@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { MessageCircle, Printer, Search, Phone, ArrowRight, Trash2 } from "lucide-react";
+import { MessageCircle, Printer, Search, ArrowRight, Trash2, CheckCircle2, Clock } from "lucide-react";
+import { clsx } from "clsx";
 import { formatRepairNumber } from "@/lib/invoice-number";
-import { RepairStatusBadge } from "@/components/repairs/RepairStatusBadge";
 import { updateRepairStatus, deleteRepairOrder } from "@/lib/actions/repair";
 import { buildRepairReadyWhatsApp, buildRepairReceivedWhatsApp } from "@/lib/repair-whatsapp";
 import type { RepairOrder, RepairStatus } from "@/generated/prisma/client";
@@ -17,6 +17,15 @@ const STATUS_FILTERS: { label: string; value: RepairStatus | "ALL" }[] = [
   { label: "Ready", value: "READY" },
   { label: "Delivered", value: "DELIVERED" },
 ];
+
+const STATUS_PILL_STYLES: Record<RepairStatus, string> = {
+  RECEIVED: "bg-zinc-100 text-zinc-700 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
+  IN_PROGRESS: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/60",
+  WAITING_PARTS: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60",
+  READY: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60 font-bold",
+  DELIVERED: "bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-800/60 dark:text-zinc-400 dark:border-zinc-700",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-800/60",
+};
 
 export function RepairList({
   initialOrders,
@@ -64,20 +73,20 @@ export function RepairList({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-white/40" size={18} />
+        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
         <input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by customer name, phone, device, IMEI, or #REP-000001..."
-          className="w-full rounded-lg border border-black/15 bg-white py-2.5 pl-10 pr-4 text-sm dark:border-white/15 dark:bg-black"
+          placeholder="Search customer, phone, device, or #REP-000001..."
+          className="w-full rounded-xl border border-zinc-200/90 bg-white py-2 pl-9 pr-4 text-xs font-medium placeholder:text-zinc-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:border-zinc-800 dark:bg-[#121316] dark:text-white"
         />
       </div>
 
-      {/* Status Filter Tabs */}
-      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+      {/* Status Filter Chips */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
         {STATUS_FILTERS.map(({ label, value }) => {
           const active = selectedStatus === value;
           const count =
@@ -89,11 +98,12 @@ export function RepairList({
             <button
               key={value}
               onClick={() => setSelectedStatus(value)}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              className={clsx(
+                "rounded-full px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap cursor-pointer",
                 active
-                  ? "bg-orange-600 text-white"
-                  : "bg-black/5 text-black/60 hover:bg-black/10 dark:bg-white/10 dark:text-white/60"
-              }`}
+                  ? "bg-orange-600 text-white font-semibold shadow-sm"
+                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800/80 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              )}
             >
               {label} {count > 0 && `(${count})`}
             </button>
@@ -101,8 +111,8 @@ export function RepairList({
         })}
       </div>
 
-      {/* Orders List */}
-      <div className="space-y-3">
+      {/* Ultra Neat Repair Cards List */}
+      <div className="space-y-2.5">
         {filteredOrders.map((order) => {
           const estCost = order.estimatedCost ? Number(order.estimatedCost) : null;
           const advPaid = Number(order.advancePaid) || 0;
@@ -134,168 +144,174 @@ export function RepairList({
           return (
             <div
               key={order.id}
-              className="rounded-xl border border-black/10 bg-white p-4 shadow-sm transition-all hover:border-black/20 dark:border-white/10 dark:bg-black"
+              className="group rounded-2xl border border-zinc-200/90 bg-white p-3.5 shadow-sm transition-all hover:border-orange-500/40 hover:shadow-md dark:border-zinc-800/90 dark:bg-[#121316]"
             >
-              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-black/5 pb-3 dark:border-white/5">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/repairs/${order.id}`}
-                      className="font-mono text-sm font-bold text-orange-600 hover:underline"
-                    >
-                      #{formatRepairNumber(order.sequence)}
-                    </Link>
-                    <RepairStatusBadge status={order.status} />
-                  </div>
-                  <p className="mt-0.5 text-xs text-black/50 dark:text-white/50">
-                    Received on {new Date(order.createdAt).toLocaleDateString()}
-                    {order.createdBy && ` by ${order.createdBy.name}`}
-                  </p>
+              {/* Header: Ticket #, Date, Status Dropdown Pill */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/repairs/${order.id}`}
+                    className="font-mono text-xs font-bold text-orange-600 dark:text-orange-500 hover:underline"
+                  >
+                    #{formatRepairNumber(order.sequence)}
+                  </Link>
+                  <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                    · {new Date(order.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <select
-                    disabled={isPending}
-                    value={order.status}
-                    onChange={(e) => handleStatusChange(order.id, e.target.value as RepairStatus)}
-                    aria-label="Change repair status"
-                    className="rounded-md border border-black/15 bg-white px-2.5 py-1 text-xs font-semibold text-black/80 dark:border-white/15 dark:bg-neutral-900 dark:text-white"
+                {/* Single Interactive Status Pill (Eliminates Duplicate Status) */}
+                <select
+                  disabled={isPending}
+                  value={order.status}
+                  onChange={(e) => handleStatusChange(order.id, e.target.value as RepairStatus)}
+                  aria-label="Change repair status"
+                  className={clsx(
+                    "cursor-pointer rounded-full px-2.5 py-0.5 text-[11px] font-semibold border transition-all focus:outline-none focus:ring-1 focus:ring-orange-500 dark:bg-neutral-900",
+                    STATUS_PILL_STYLES[order.status]
+                  )}
+                >
+                  <option value="RECEIVED">Received</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="WAITING_PARTS">Waiting Parts</option>
+                  <option value="READY">Ready</option>
+                  <option value="DELIVERED">Delivered</option>
+                  <option value="CANCELLED">Cancelled</option>
+                </select>
+              </div>
+
+              {/* Body: Device, Customer & Cost */}
+              <div className="mt-2.5 flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/repairs/${order.id}`}
+                    className="text-sm font-bold text-black dark:text-white hover:text-orange-600 transition-colors truncate block"
                   >
-                    <option value="RECEIVED">Received</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="WAITING_PARTS">Waiting Parts</option>
-                    <option value="READY">Ready for Pickup</option>
-                    <option value="DELIVERED">Delivered</option>
-                    <option value="CANCELLED">Cancelled</option>
-                  </select>
+                    {order.deviceBrand} {order.deviceModel}
+                  </Link>
+                  <div className="mt-0.5 flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                    <span className="font-medium text-zinc-800 dark:text-zinc-200 truncate">{order.customerName}</span>
+                    <span>·</span>
+                    <a
+                      href={`tel:${order.customerPhone}`}
+                      className="font-mono text-zinc-600 dark:text-zinc-300 hover:text-orange-600 transition-colors"
+                    >
+                      {order.customerPhone}
+                    </a>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-bold text-black dark:text-white">
+                    {order.finalCost
+                      ? `Rs. ${Number(order.finalCost).toFixed(2)}`
+                      : estCost !== null
+                        ? `Rs. ${estCost.toFixed(2)}`
+                        : "TBD"}
+                  </p>
+                  {balance !== null && balance > 0 ? (
+                    <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                      Rs. {balance.toFixed(2)} due
+                    </p>
+                  ) : balance === 0 ? (
+                    <p className="text-[10px] font-semibold text-green-600 dark:text-green-400">
+                      ✓ Paid
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-zinc-400">Est. cost</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Issue & Lock Metadata Chips (Ultra-Clean Tags) */}
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs">
+                <span className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                  <span className="text-zinc-400">Issue:</span> {order.faultDescription}
+                </span>
+
+                {order.passcode && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-mono text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                    🔒 {order.passcode}
+                  </span>
+                )}
+
+                {order.imeiOrSerial && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-mono text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 truncate max-w-[150px]">
+                    IMEI: {order.imeiOrSerial}
+                  </span>
+                )}
+              </div>
+
+              {/* Minimal Card Footer Actions */}
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-zinc-100 pt-2.5 dark:border-zinc-800/80">
+                <div>
+                  {order.status === "READY" && readyWaLink ? (
+                    <a
+                      href={readyWaLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-lg bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 hover:bg-green-100 dark:bg-green-950/40 dark:text-green-400 transition-colors"
+                    >
+                      <MessageCircle size={13} />
+                      <span>WhatsApp: Ready!</span>
+                    </a>
+                  ) : receivedWaLink ? (
+                    <a
+                      href={receivedWaLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-lg bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 transition-colors"
+                    >
+                      <MessageCircle size={13} />
+                      <span>WhatsApp Slip</span>
+                    </a>
+                  ) : null}
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <Link
+                    href={`/repairs/${order.id}`}
+                    className="flex items-center gap-1 rounded-lg bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700 hover:bg-orange-600 hover:text-white dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-orange-600 dark:hover:text-white transition-colors"
+                    title="View job ticket and print receipt"
+                  >
+                    <Printer size={13} />
+                    <span>Slip</span>
+                  </Link>
 
                   <Link
                     href={`/repairs/${order.id}`}
-                    aria-label="Print or view job ticket"
-                    className="rounded-md border border-black/15 p-1.5 text-black/60 hover:bg-black/5 dark:border-white/15 dark:text-white/60 dark:hover:bg-white/10"
-                    title="Print / View Job Ticket"
+                    className="flex items-center gap-1 rounded-lg border border-zinc-200 px-2.5 py-1 text-xs font-semibold text-zinc-700 hover:border-orange-500 hover:text-orange-600 dark:border-zinc-800 dark:text-zinc-300 dark:hover:text-orange-400 transition-colors"
                   >
-                    <Printer size={16} />
+                    <span>Manage</span>
+                    <ArrowRight size={12} />
                   </Link>
 
                   {isAdmin && (
                     <button
                       onClick={() => handleDelete(order.id)}
-                      aria-label="Delete repair order"
-                      className="rounded-md border border-zinc-200 p-1.5 text-zinc-400 hover:border-orange-500 hover:text-orange-600 dark:border-zinc-800 dark:text-zinc-500 dark:hover:text-orange-400 transition-colors"
-                      title="Delete Order"
+                      className="rounded-lg p-1.5 text-zinc-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-colors cursor-pointer"
+                      title="Delete repair job"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={13} />
                     </button>
                   )}
                 </div>
-              </div>
-
-              {/* Body */}
-              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3 text-xs">
-                <div>
-                  <p className="font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider text-[10px]">
-                    Customer
-                  </p>
-                  <p className="font-bold text-sm text-black dark:text-white">{order.customerName}</p>
-                  <a
-                    href={`tel:${order.customerPhone}`}
-                    className="flex items-center gap-1 font-mono text-black/70 hover:underline dark:text-white/70"
-                  >
-                    <Phone size={12} />
-                    {order.customerPhone}
-                  </a>
-                </div>
-
-                <div>
-                  <p className="font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider text-[10px]">
-                    Device & Lock
-                  </p>
-                  <p className="font-bold text-sm text-black dark:text-white">
-                    {order.deviceBrand} {order.deviceModel}
-                  </p>
-                  <p className="text-black/60 dark:text-white/60">
-                    {order.passcode ? `Lock: ${order.passcode}` : "No passcode"}
-                  </p>
-                  {order.imeiOrSerial && (
-                    <p className="font-mono text-[11px] text-black/50 dark:text-white/50">
-                      IMEI: {order.imeiOrSerial}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <p className="font-semibold text-black/50 dark:text-white/50 uppercase tracking-wider text-[10px]">
-                    Cost & Balance
-                  </p>
-                  <p className="font-medium text-black/70 dark:text-white/70">
-                    Est: {estCost !== null ? `Rs. ${estCost.toFixed(2)}` : "TBD"}
-                  </p>
-                  {advPaid > 0 && <p className="text-black/60 dark:text-white/60">Adv: Rs. {advPaid.toFixed(2)}</p>}
-                  <p className="font-bold text-sm text-orange-600">
-                    Due: {balance !== null ? `Rs. ${balance.toFixed(2)}` : "—"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Issue Description */}
-              <div className="mt-2.5 rounded-lg bg-black/5 px-3 py-2 text-xs text-black/80 dark:bg-white/5 dark:text-white/80">
-                <span className="font-semibold text-black dark:text-white">Issue: </span>
-                {order.faultDescription}
-                {order.conditionNotes && (
-                  <span className="block mt-0.5 text-black/60 dark:text-white/60">
-                    Condition: {order.conditionNotes}
-                  </span>
-                )}
-              </div>
-
-              {/* Footer Quick Action Buttons */}
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-black/5 dark:border-white/5">
-                <div className="flex gap-2">
-                  {order.status === "READY" && readyWaLink && (
-                    <a
-                      href={readyWaLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 shadow-sm"
-                    >
-                      <MessageCircle size={14} />
-                      WhatsApp Customer: Ready!
-                    </a>
-                  )}
-
-                  {order.status === "RECEIVED" && receivedWaLink && (
-                    <a
-                      href={receivedWaLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-md bg-black/5 px-3 py-1.5 text-xs font-semibold text-black/70 hover:bg-black/10 dark:bg-white/10 dark:text-white/80"
-                    >
-                      <MessageCircle size={14} />
-                      Send Slip
-                    </a>
-                  )}
-                </div>
-
-                <Link
-                  href={`/repairs/${order.id}`}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-orange-600 hover:underline"
-                >
-                  Manage Details & Slip
-                  <ArrowRight size={13} />
-                </Link>
               </div>
             </div>
           );
         })}
 
         {filteredOrders.length === 0 && (
-          <div className="rounded-xl border border-dashed border-black/15 p-8 text-center text-sm text-black/40 dark:border-white/15 dark:text-white/40">
-            No repair orders found. Click &quot;New Repair Job&quot; to intake a device.
+          <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 text-center text-zinc-400 dark:border-zinc-800 dark:bg-[#121316]">
+            <p className="text-xs font-semibold text-black dark:text-white">No repair orders found</p>
+            <p className="text-[11px] text-zinc-400 mt-0.5">
+              {searchQuery
+                ? `No orders matching "${searchQuery}"`
+                : "No repair orders in this status category."}
+            </p>
           </div>
         )}
       </div>
     </div>
   );
 }
-
