@@ -54,3 +54,12 @@ body {
     print-color-adjust: exact;
   }
 }
+
+@keyframes barcodeScan {
+  0% {
+    top: 5%;
+  }
+  100% {
+    top: 92%;
+  }
+}

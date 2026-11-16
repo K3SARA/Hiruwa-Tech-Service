@@ -3,9 +3,10 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
-import { Search, Trash2, Loader2, CheckCircle2, Printer, MessageCircle, ShoppingCart, X } from "lucide-react";
+import { Search, Trash2, Loader2, CheckCircle2, Printer, MessageCircle, ShoppingCart, X, Camera } from "lucide-react";
 import { searchAvailableUnits, checkoutInvoice, type AvailableUnit } from "@/lib/actions/pos";
 import { CategoryFilter } from "@/components/pos/CategoryFilter";
+import { BarcodeScannerModal } from "@/components/pos/BarcodeScannerModal";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { BUSINESS } from "@/lib/business";
 
@@ -58,6 +59,47 @@ export function CartPanel() {
   const [isSearching, startSearch] = useTransition();
   const [isCheckingOut, startCheckout] = useTransition();
   const [showCartSheet, setShowCartSheet] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  async function handleBarcodeScan(code: string): Promise<{ success: boolean; message: string }> {
+    const trimmed = code.trim();
+    if (!trimmed) {
+      return { success: false, message: "Empty barcode scanned." };
+    }
+
+    try {
+      const found = await searchAvailableUnits(trimmed);
+      if (found.length === 0) {
+        return { success: false, message: `No in-stock item found for code "${trimmed}"` };
+      }
+
+      if (found.length === 1) {
+        const item = found[0];
+        const isAlreadyInCart = cart.some((c) => c.unitId === item.unitId);
+        if (isAlreadyInCart && item.warrantyMonths > 0) {
+          return { success: false, message: `${item.productName} (SN: ${item.serialNumber}) is already in cart!` };
+        }
+        addToCart(item);
+        return {
+          success: true,
+          message: `✓ Added ${item.brand} ${item.productName}${item.warrantyMonths > 0 ? ` (SN: ${item.serialNumber})` : ""} to cart!`,
+        };
+      }
+
+      // If multiple units/products match the barcode, update query & list
+      setQuery(trimmed);
+      setResults(found);
+      return {
+        success: true,
+        message: `Found ${found.length} items for "${trimmed}". Select one from the list.`,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : "Failed to search barcode",
+      };
+    }
+  }
 
   function runSearch(q: string, cat: string | null) {
     setError(null);
@@ -388,19 +430,30 @@ export function CartPanel() {
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
       {/* Left side: Product search & results */}
       <div className="space-y-4 md:col-span-7 lg:col-span-8">
-        {/* Search Input */}
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-black/40" size={18} />
-          <input
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="Scan serial number or search product..."
-            autoFocus
-            className="w-full rounded-md border border-black/15 bg-white py-2.5 pl-10 pr-3 text-sm dark:border-white/15 dark:bg-black"
-          />
-          {isSearching && (
-            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-black/40" size={16} />
-          )}
+        {/* Search Input & Camera Scanner Button */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-black/40" size={18} />
+            <input
+              value={query}
+              onChange={(e) => handleQueryChange(e.target.value)}
+              placeholder="Scan serial number or search product..."
+              autoFocus
+              className="w-full rounded-md border border-black/15 bg-white py-2.5 pl-10 pr-3 text-sm dark:border-white/15 dark:bg-black"
+            />
+            {isSearching && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-black/40" size={16} />
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsScannerOpen(true)}
+            className="flex shrink-0 items-center gap-1.5 rounded-md bg-orange-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-500 transition-all cursor-pointer active:scale-95"
+            title="Scan barcode using camera"
+          >
+            <Camera size={18} />
+            <span className="hidden sm:inline">Camera</span>
+          </button>
         </div>
 
         {/* Category Filter */}
@@ -502,6 +555,14 @@ export function CartPanel() {
           {checkoutForm}
         </div>
       </div>
+
+      {/* Barcode Camera Scanner Modal */}
+      <BarcodeScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={handleBarcodeScan}
+        title="Scan Barcode / Serial Number"
+      />
     </div>
   );
 }
