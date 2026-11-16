@@ -56,43 +56,47 @@ export default async function ProductDetailPage({
         <AddSerialsForm productId={product.id} />
       </div>
 
-      <table className="w-full overflow-hidden rounded-lg border border-black/10 bg-white text-sm dark:border-white/10 dark:bg-black">
-        <thead className="bg-black/5 text-left text-xs uppercase text-black/50 dark:bg-white/5 dark:text-white/50">
-          <tr>
-            <th className="px-4 py-2">Serial number</th>
-            <th className="px-4 py-2">Location</th>
-            <th className="px-4 py-2">Status</th>
-            <th className="px-4 py-2" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-black/10 dark:divide-white/10">
-          {product.units.map((u) => (
-            <tr key={u.id}>
-              <td className="px-4 py-2 font-mono text-xs">{u.serialNumber}</td>
-              <td className="px-4 py-2">{u.location ?? "—"}</td>
-              <td className="px-4 py-2">
-                {u.status === "SOLD" ? (
-                  <span className="text-xs text-black/50 dark:text-white/50">SOLD</span>
-                ) : (
-                  <StatusSelect unitId={u.id} productId={product.id} status={u.status} />
-                )}
-              </td>
-              <td className="px-4 py-2 text-right">
-                {u.status !== "SOLD" && (
-                  <form action={deleteInventoryUnit.bind(null, u.id, product.id)}>
-                    <button className="text-xs text-zinc-400 hover:text-orange-600 dark:text-zinc-500 dark:hover:text-orange-400 transition-colors">Remove</button>
-                  </form>
-                )}
-              </td>
-            </tr>
-          ))}
-          {product.units.length === 0 && (
+      <div className="overflow-x-auto rounded-lg border border-black/10 bg-white text-sm dark:border-white/10 dark:bg-black">
+        <table className="w-full">
+          <thead className="bg-black/5 text-left text-xs uppercase text-black/50 dark:bg-white/5 dark:text-white/50">
             <tr>
-              <td colSpan={4} className="px-4 py-6 text-center text-black/40">No units received yet.</td>
+              <th className="px-4 py-2">Serial number</th>
+              <th className="px-4 py-2">Location</th>
+              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2 text-right">Action</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-black/10 dark:divide-white/10">
+            {product.units.map((u) => (
+              <tr key={u.id}>
+                <td className="px-4 py-2 font-mono text-xs">{u.serialNumber}</td>
+                <td className="px-4 py-2">{u.location ?? "—"}</td>
+                <td className="px-4 py-2">
+                  {u.status === "SOLD" ? (
+                    <span className="text-xs text-black/50 dark:text-white/50">SOLD</span>
+                  ) : (
+                    <StatusSelect unitId={u.id} productId={product.id} status={u.status} />
+                  )}
+                </td>
+                <td className="px-4 py-2 text-right">
+                  {u.status !== "SOLD" && (
+                    <form action={deleteInventoryUnit.bind(null, u.id, product.id)}>
+                      <button className="text-xs text-zinc-400 hover:text-orange-600 dark:text-zinc-500 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                        Remove
+                      </button>
+                    </form>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {product.units.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-black/40">No units received yet.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

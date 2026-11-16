@@ -41,11 +41,13 @@ export default async function MobileLayout({ children }: { children: React.React
         </form>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 dark:bg-[#0c0d0e] print:overflow-visible print:bg-white print:p-0">
+      <main className="flex-1 overflow-y-auto p-4 pb-20 sm:pb-4 dark:bg-[#0c0d0e] print:overflow-visible print:bg-white print:p-0">
         {children}
       </main>
 
-      <MobileNav />
+      <div className="fixed bottom-0 inset-x-0 z-30 sm:static">
+        <MobileNav role={session?.user?.role} />
+      </div>
       <Footer />
     </div>
   );

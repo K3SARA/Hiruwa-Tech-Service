@@ -7,3 +7,4 @@ export function generateShopBarcode(prefix = "HTS"): string {
   const randomPart = Math.floor(100 + Math.random() * 900);
   return `${prefix}-${timestampPart}${randomPart}`;
 }
+
