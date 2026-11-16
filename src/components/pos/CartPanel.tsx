@@ -70,9 +70,54 @@ export function CartPanel() {
     try {
       const found = await searchAvailableUnits(trimmed);
       if (found.length === 0) {
-        return { success: false, message: `No in-stock item found for code "${trimmed}"` };
+        return { success: false, message: `No in-stock item found for barcode "${trimmed}"` };
       }
 
+      // 1. Check for exact serial number match first
+      const exactSerialItem = found.find(
+        (item) => item.serialNumber.toLowerCase() === trimmed.toLowerCase()
+      );
+      if (exactSerialItem) {
+        const isAlreadyInCart = cart.some((c) => c.unitId === exactSerialItem.unitId);
+        if (isAlreadyInCart) {
+          return {
+            success: false,
+            message: `${exactSerialItem.productName} (SN: ${exactSerialItem.serialNumber}) is already in cart!`,
+          };
+        }
+        addToCart(exactSerialItem);
+        return {
+          success: true,
+          message: `✓ Added ${exactSerialItem.brand} ${exactSerialItem.productName} (SN: ${exactSerialItem.serialNumber}) to cart!`,
+        };
+      }
+
+      // 2. Check for exact assigned product barcode / SKU match
+      const exactSkuItems = found.filter(
+        (item) => item.sku.toLowerCase() === trimmed.toLowerCase()
+      );
+      if (exactSkuItems.length > 0) {
+        // If non-serialized, exactSkuItems has 1 item (already grouped by product)
+        // If serialized, pick the first in-stock unit not yet added to cart
+        const nextAvailable = exactSkuItems.find(
+          (item) => !cart.some((c) => c.unitId === item.unitId)
+        );
+
+        if (!nextAvailable) {
+          return {
+            success: false,
+            message: `All in-stock units of ${exactSkuItems[0].productName} are already in cart!`,
+          };
+        }
+
+        addToCart(nextAvailable);
+        return {
+          success: true,
+          message: `✓ Added ${nextAvailable.brand} ${nextAvailable.productName}${nextAvailable.warrantyMonths > 0 ? ` (SN: ${nextAvailable.serialNumber})` : ""} to cart!`,
+        };
+      }
+
+      // 3. If single result found
       if (found.length === 1) {
         const item = found[0];
         const isAlreadyInCart = cart.some((c) => c.unitId === item.unitId);
@@ -82,16 +127,16 @@ export function CartPanel() {
         addToCart(item);
         return {
           success: true,
-          message: `✓ Added ${item.brand} ${item.productName}${item.warrantyMonths > 0 ? ` (SN: ${item.serialNumber})` : ""} to cart!`,
+          message: `✓ Added ${item.brand} ${item.productName} to cart!`,
         };
       }
 
-      // If multiple units/products match the barcode, update query & list
+      // 4. Multiple different products matched (e.g. partial search query)
       setQuery(trimmed);
       setResults(found);
       return {
         success: true,
-        message: `Found ${found.length} items for "${trimmed}". Select one from the list.`,
+        message: `Found ${found.length} items for "${trimmed}". Select one from list.`,
       };
     } catch (err) {
       return {

@@ -64,7 +64,7 @@ export async function createProduct(_prevState: ActionResult, formData: FormData
     });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      return { error: `Model Number "${data.sku}" is already in use by another product.` };
+      return { error: `Barcode / Model Number "${data.sku}" is already in use by another product.` };
     }
     throw err;
   }
@@ -116,7 +116,7 @@ export async function updateProduct(
     });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      return { error: `Model Number "${data.sku}" is already in use by another product.` };
+      return { error: `Barcode / Model Number "${data.sku}" is already in use by another product.` };
     }
     throw err;
   }
